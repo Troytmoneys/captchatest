@@ -1,0 +1,6 @@
+{
+  "name": "captcha-arena",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vercel-ready hCaptcha and reCAPTCHA challenge counter with leaderboard"
+}

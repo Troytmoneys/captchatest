@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Captcha Arena</title>
+  <meta name="description" content="Choose hCaptcha or reCAPTCHA, complete challenges, and climb the leaderboard." />
+  <style>
+    :root {
+      --bg: #090b12;
+      --panel: rgba(20, 24, 38, .84);
+      --panel-2: #131827;
+      --text: #f7f8fc;
+      --muted: #9aa4ba;
+      --line: rgba(255,255,255,.09);
+      --accent: #7c5cff;
+      --accent-2: #42d6ff;
+      --good: #2ed49a;
+      --danger: #ff6b7a;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(124,92,255,.22), transparent 30%),
+        radial-gradient(circle at 88% 18%, rgba(66,214,255,.14), transparent 28%),
+        linear-gradient(180deg, #080a10 0%, #0c0f18 100%);
+    }
+
+    button, input { font: inherit; }
+
+    .shell {
+      width: min(1100px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 38px 0 64px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 850;
+      letter-spacing: -.03em;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 8px 28px rgba(124,92,255,.28);
+    }
+
+    .pill {
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.035);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: .84rem;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      right: -110px;
+      top: -130px;
+      background: rgba(124,92,255,.20);
+      filter: blur(4px);
+      pointer-events: none;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      max-width: 760px;
+      font-size: clamp(2.15rem, 7vw, 4.9rem);
+      line-height: .98;
+      letter-spacing: -.06em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.65;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 21px 22px 14px;
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 1.08rem;
+      letter-spacing: -.02em;
+    }
+
+    .card-body { padding: 0 22px 22px; }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: .83rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .name-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0d111c;
+      color: var(--text);
+      outline: none;
+      border-radius: 13px;
+      padding: 13px 14px;
+    }
+
+    input:focus { border-color: rgba(124,92,255,.8); box-shadow: 0 0 0 3px rgba(124,92,255,.12); }
+
+    .provider-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .provider {
+      text-align: left;
+      cursor: pointer;
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: 16px;
+      padding: 17px;
+      transition: .18s ease;
+    }
+
+    .provider:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+    .provider.active {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent), 0 10px 30px rgba(124,92,255,.14);
+    }
+
+    .provider strong { display: block; font-size: 1rem; margin-bottom: 4px; }
+    .provider span { color: var(--muted); font-size: .84rem; }
+
+    .captcha-zone {
+      min-height: 118px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      border: 1px dashed rgba(255,255,255,.14);
+      background: rgba(255,255,255,.025);
+      padding: 18px;
+      overflow: auto;
+    }
+
+    .hint, .status {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    .status {
+      min-height: 22px;
+      margin: 13px 0 0;
+    }
+
+    .status.good { color: var(--good); }
+    .status.bad { color: var(--danger); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .stat {
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+      border-radius: 16px;
+    }
+
+    .stat .n {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: -.04em;
+    }
+
+    .stat .k {
+      color: var(--muted);
+      font-size: .8rem;
+      margin-top: 3px;
+    }
+
+    .leaderboard {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .leaderboard th,
+    .leaderboard td {
+      text-align: left;
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--line);
+      font-size: .9rem;
+    }
+
+    .leaderboard th {
+      color: var(--muted);
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .leaderboard tr:last-child td { border-bottom: 0; }
+    .rank { width: 40px; color: var(--muted); }
+    .score { text-align: right !important; font-variant-numeric: tabular-nums; }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 30px 8px !important;
+    }
+
+    .footer {
+      text-align: center;
+      color: #778099;
+      margin-top: 22px;
+      font-size: .8rem;
+    }
+
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero { padding: 26px 22px; }
+    }
+
+    @media (max-width: 520px) {
+      .provider-grid, .stats { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; }
+      .pill { display: none; }
+      .card-head, .card-body { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">✓</div>
+        Captcha Arena
+      </div>
+      <div class="pill">Verified solves only</div>
+    </div>
+
+    <section class="hero">
+      <h1>Which CAPTCHA do you want to do?</h1>
+      <p>Pick hCaptcha or reCAPTCHA, complete a challenge, and watch your score climb. Every completion is verified on the server before it reaches the leaderboard.</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="card-head">
+          <h2>Challenge</h2>
+          <span class="hint" id="selectedLabel">hCaptcha selected</span>
+        </div>
+
+        <div class="card-body">
+          <label for="username">Leaderboard name</label>
+          <div class="name-row">
+            <input id="username" maxlength="24" autocomplete="nickname" placeholder="Enter a name" />
+          </div>
+
+          <label>Choose a CAPTCHA</label>
+          <div class="provider-grid">
+            <button class="provider active" data-provider="hcaptcha">
+              <strong>hCaptcha</strong>
+              <span>Complete an hCaptcha challenge</span>
+            </button>
+            <button class="provider" data-provider="recaptcha">
+              <strong>reCAPTCHA</strong>
+              <span>Complete a Google reCAPTCHA challenge</span>
+            </button>
+          </div>
+
+          <div class="captcha-zone">
+            <div id="captchaMount" class="hint">Loading CAPTCHA…</div>
+          </div>
+
+          <div id="status" class="status">Enter your name, then solve a challenge.</div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="n" id="hTotal">0</div>
+              <div class="k">hCaptcha solves</div>
+            </div>
+            <div class="stat">
+              <div class="n" id="rTotal">0</div>
+              <div class="k">reCAPTCHA solves</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card">
+        <div class="card-head">
+          <h2>Leaderboard</h2>
+          <span class="hint">Top 20</span>
+        </div>
+        <div class="card-body">
+          <table class="leaderboard" aria-label="Captcha leaderboard">
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th>Player</th>
+                <th class="score">hC</th>
+                <th class="score">reC</th>
+                <th class="score">Total</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardRows">
+              <tr><td colspan="5" class="empty">Loading leaderboard…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </section>
+
+    <div class="footer">Captcha Arena · Vercel-ready demo</div>
+  </main>
+
+  <script>
+    // Replace these two public site keys with your real keys.
+    // You can also set them through a build step if you later migrate this to a framework.
+    const CONFIG = {
+      hcaptchaSiteKey: "YOUR_HCAPTCHA_SITE_KEY",
+      recaptchaSiteKey: "YOUR_RECAPTCHA_SITE_KEY"
+    };
+
+    const state = {
+      provider: "hcaptcha",
+      hWidget: null,
+      rWidget: null,
+      busy: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const mount = $("captchaMount");
+    const statusEl = $("status");
+    const username = $("username");
+
+    username.value = localStorage.getItem("captcha-arena-name") || "";
+    username.addEventListener("input", () => {
+      localStorage.setItem("captcha-arena-name", username.value.trim());
+    });
+
+    document.querySelectorAll(".provider").forEach(btn => {
+      btn.addEventListener("click", () => switchProvider(btn.dataset.provider));
+    });
+
+    function setStatus(message, kind = "") {
+      statusEl.textContent = message;
+      statusEl.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function validName() {
+      const name = username.value.trim();
+      if (!name) {
+        setStatus("Enter a leaderboard name before solving.", "bad");
+        username.focus();
+        return null;
+      }
+      return name;
+    }
+
+    function loadScript(src, id) {
+      return new Promise((resolve, reject) => {
+        const old = document.getElementById(id);
+        if (old) {
+          if (old.dataset.loaded === "1") return resolve();
+          old.addEventListener("load", resolve, { once: true });
+          return;
+        }
+
+        const s = document.createElement("script");
+        s.id = id;
+        s.src = src;
+        s.async = true;
+        s.defer = true;
+        s.onload = () => {
+          s.dataset.loaded = "1";
+          resolve();
+        };
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    async function renderCaptcha() {
+      mount.innerHTML = "";
+      setStatus("Enter your name, then solve a challenge.");
+
+      try {
+        if (state.provider === "hcaptcha") {
+          if (CONFIG.hcaptchaSiteKey.startsWith("YOUR_")) {
+            mount.innerHTML = '<span class="hint">Add your hCaptcha site key in <code>index.html</code>.</span>';
+            return;
+          }
+
+          await loadScript("https://js.hcaptcha.com/1/api.js?render=explicit", "hcaptcha-script");
+
+          const holder = document.createElement("div");
+          mount.appendChild(holder);
+
+          state.hWidget = hcaptcha.render(holder, {
+            sitekey: CONFIG.hcaptchaSiteKey,
+            callback: token => submitSolve("hcaptcha", token),
+            "expired-callback": () => setStatus("Challenge expired. Please try again.", "bad"),
+            "error-callback": () => setStatus("hCaptcha reported an error.", "bad")
+          });
+        } else {
+          if (CONFIG.recaptchaSiteKey.startsWith("YOUR_")) {
+            mount.innerHTML = '<span class="hint">Add your reCAPTCHA site key in <code>index.html</code>.</span>';
+            return;
+          }
+
+          await loadScript("https://www.google.com/recaptcha/api.js?render=explicit", "recaptcha-script");
+
+          const holder = document.createElement("div");
+          mount.appendChild(holder);
+
+          const waitForRecaptcha = () => new Promise(resolve => {
+            if (window.grecaptcha && window.grecaptcha.render) return resolve();
+            const t = setInterval(() => {
+              if (window.grecaptcha && window.grecaptcha.render) {
+                clearInterval(t);
+                resolve();
+              }
+            }, 50);
+          });
+
+          await waitForRecaptcha();
+
+          state.rWidget = grecaptcha.render(holder, {
+            sitekey: CONFIG.recaptchaSiteKey,
+            callback: token => submitSolve("recaptcha", token),
+            "expired-callback": () => setStatus("Challenge expired. Please try again.", "bad"),
+            "error-callback": () => setStatus("reCAPTCHA reported an error.", "bad")
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        mount.innerHTML = '<span class="hint">Could not load the CAPTCHA widget.</span>';
+        setStatus("Check your site key and allowed domains.", "bad");
+      }
+    }
+
+    function switchProvider(provider) {
+      if (provider === state.provider) return;
+      state.provider = provider;
+      document.querySelectorAll(".provider").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.provider === provider);
+      });
+      $("selectedLabel").textContent = provider === "hcaptcha" ? "hCaptcha selected" : "reCAPTCHA selected";
+      renderCaptcha();
+    }
+
+    async function submitSolve(provider, token) {
+      const name = validName();
+      if (!name || state.busy) {
+        resetCurrentCaptcha();
+        return;
+      }
+
+      state.busy = true;
+      setStatus("Verifying solve…");
+
+      try {
+        const response = await fetch("/api/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, token, username: name })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "Verification failed.");
+        }
+
+        setStatus("Verified! Your score was added.", "good");
+        await loadLeaderboard();
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || "Could not verify this solve.", "bad");
+      } finally {
+        state.busy = false;
+        resetCurrentCaptcha();
+      }
+    }
+
+    function resetCurrentCaptcha() {
+      try {
+        if (state.provider === "hcaptcha" && window.hcaptcha && state.hWidget !== null) {
+          hcaptcha.reset(state.hWidget);
+        }
+        if (state.provider === "recaptcha" && window.grecaptcha && state.rWidget !== null) {
+          grecaptcha.reset(state.rWidget);
+        }
+      } catch (_) {}
+    }
+
+    async function loadLeaderboard() {
+      try {
+        const response = await fetch("/api/leaderboard", { cache: "no-store" });
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || "Could not load leaderboard.");
+
+        $("hTotal").textContent = data.totals?.hcaptcha ?? 0;
+        $("rTotal").textContent = data.totals?.recaptcha ?? 0;
+
+        const rows = $("leaderboardRows");
+        if (!data.leaderboard?.length) {
+          rows.innerHTML = '<tr><td colspan="5" class="empty">No verified solves yet.</td></tr>';
+          return;
+        }
+
+        rows.innerHTML = data.leaderboard.map((player, index) => `
+          <tr>
+            <td class="rank">${index + 1}</td>
+            <td>${escapeHtml(player.name)}</td>
+            <td class="score">${player.hcaptcha}</td>
+            <td class="score">${player.recaptcha}</td>
+            <td class="score"><strong>${player.total}</strong></td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        console.error(err);
+        $("leaderboardRows").innerHTML =
+          '<tr><td colspan="5" class="empty">Leaderboard is not configured yet.</td></tr>';
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    loadLeaderboard();
+    renderCaptcha();
+    setInterval(loadLeaderboard, 15000);
+  </script>
+</body>
+</html>
